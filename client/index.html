@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASCON Secure Login Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #2a2f3a;
+    --accent: #00e5a0;
+    --accent2: #0066ff;
+    --text: #e8ecf0;
+    --muted: #6b7280;
+    --danger: #ff4d4d;
+    --warn: #ffb347;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    grid-column: 1 / -1;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-text { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-text span { color: var(--accent); }
+
+  .badge-nist {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.3);
+    border-radius: 20px;
+    color: var(--accent);
+  }
+
+  /* ── LEFT PANEL: Login Form ─────────────────────────── */
+  .panel-left {
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .panel-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    font-weight: 400;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-top: 10px;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+
+  .hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 20px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent2);
+  }
+
+  /* ── RIGHT PANEL: Traffic Monitor ─────────────────────────── */
+  .panel-right {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .monitor-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .monitor-title {
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot-live {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .btn-clear {
+    font-size: 12px; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    font-family: 'Syne', sans-serif;
+  }
+  .btn-clear:hover { color: var(--danger); }
+
+  /* Traffic entries */
+  .traffic-list {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .traffic-entry {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: slide-in 0.3s ease;
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .traffic-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .traffic-header:hover { background: var(--surface2); }
+
+  .traffic-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .traffic-method {
+    background: rgba(0,102,255,0.15);
+    color: var(--accent2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .traffic-path { color: var(--text); }
+  .traffic-time { color: var(--muted); font-size: 11px; }
+
+  .traffic-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .badge-enc {
+    background: rgba(0,229,160,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,160,0.3);
+  }
+  .badge-200 { background: rgba(0,229,160,0.1); color: var(--accent); }
+  .badge-401 { background: rgba(255,77,77,0.1); color: var(--danger); }
+  .badge-err { background: rgba(255,179,71,0.1); color: var(--warn); }
+
+  .traffic-body {
+    border-top: 1px solid var(--border);
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    display: none;
+  }
+  .traffic-body.open { display: block; }
+
+  .traffic-body .label {
+    color: var(--muted); margin-bottom: 4px; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .traffic-body .payload {
+    color: var(--accent);
+    word-break: break-all;
+    background: var(--surface2);
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 10.5px;
+  }
+  .traffic-body .payload.plain { color: #ffd700; }
+
+  /* Alert box */
+  .alert {
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    display: none;
+    margin-top: 14px;
+  }
+  .alert.success { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--accent); }
+  .alert.error   { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3); color: var(--danger); }
+
+  /* Token display */
+  .token-box {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    word-break: break-all;
+    display: none;
+    border: 1px solid rgba(0,229,160,0.2);
+  }
+  .token-box .tlabel {
+    color: var(--muted); font-size: 10px; display: block; margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  /* Arch diagram */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+  .arch-diagram .enc { color: var(--accent); }
+  .arch-diagram .plain { color: var(--warn); }
+  .arch-diagram .node { color: var(--text); font-weight: 600; }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: -3px;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 18 18" fill="none">
+        <rect x="2" y="6" width="14" height="10" rx="2" stroke="#000" stroke-width="1.5"/>
+        <path d="M6 6V4a3 3 0 016 0v2" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="9" cy="11" r="1.5" fill="#000"/>
+      </svg>
+    </div>
+    <span class="logo-text">ASCON<span>Gateway</span></span>
+  </div>
+  <div class="badge-nist">NIST LWC Standard 2023 · ASCON-128</div>
+</header>
+
+<!-- ── LEFT: Login Form ── -->
+<div class="panel-left">
+  <p class="panel-title">Secure Login</p>
+  <p class="panel-sub">Semua payload dienkripsi ASCON-128 sebelum dikirim ke server</p>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="admin" value="admin" />
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="admin123" value="admin123" />
+  </div>
+
+  <button class="btn btn-primary" onclick="doLogin()">
+    Login dengan ASCON Encryption
+  </button>
+  <button class="btn btn-secondary" onclick="doLogout()">Logout</button>
+
+  <div id="alert" class="alert"></div>
+  <div id="token-box" class="token-box">
+    <span class="tlabel">Session Token (terenkripsi saat transit)</span>
+    <span id="token-val"></span>
+  </div>
+
+  <div class="divider">Demo Akun</div>
+  <div class="hint">
+    admin / admin123<br>
+    alice / user123
+  </div>
+</div>
+
+<!-- ── RIGHT: Traffic Monitor ── -->
+<div class="panel-right">
+
+  <div class="monitor-header">
+    <div class="monitor-title">
+      <div class="dot-live"></div>
+      Network Traffic Monitor
+    </div>
+    <button class="btn-clear" onclick="clearTraffic()">Bersihkan</button>
+  </div>
+
+  <!-- Architecture diagram -->
+  <div class="arch-diagram">
+    <span class="node">Client</span>
+    <span class="enc"> ──[ASCON encrypted]──▶ </span>
+    <span class="node">Gateway :8000</span>
+    <span class="plain"> ──[plain HTTP]──▶ </span>
+    <span class="node">WebApp :5000</span>
+    <br>
+    <span style="color:#555">↑ Yang terlihat di Wireshark: ciphertext saja ↑</span>
+  </div>
+
+  <div class="traffic-list" id="traffic-list">
+    <div style="color:var(--muted); font-size:13px; text-align:center; padding: 24px 0;">
+      Belum ada request. Coba login di sebelah kiri.
+    </div>
+  </div>
+</div>
+
+<script>
+const GATEWAY = 'http://172.31.184.11:8000'
+const PSK_HEX = 'deadbeefcafebabedeadbeefcafebabe'
+
+// ── ASCON-128 implementation (inline, identik dengan ascon.py) ─────────────
+
+function rotr64(lo, hi, n) {
+  if (n < 32) {
+    return { lo: (lo >>> n) | (hi << (32-n)), hi: (hi >>> n) | (lo << (32-n)) }
+  }
+  n -= 32
+  return { lo: (hi >>> n) | (lo << (32-n)), hi: (lo >>> n) | (hi << (32-n)) }
+}
+
+// Kita pakai BigInt untuk kemudahan implementasi 64-bit
+const ROUND_CONSTANTS = [0xf0n, 0xe1n, 0xd2n, 0xc3n, 0xb4n, 0xa5n, 0x96n, 0x87n, 0x78n, 0x69n, 0x5an, 0x4bn]
+const MASK64 = 0xFFFFFFFFFFFFFFFFn
+
+function rotr(val, n) {
+  n = BigInt(n)
+  return ((val >> n) | (val << (64n - n))) & MASK64
+}
+
+function permutation(state, rounds) {
+  let s = [...state]
+  const start = 12 - rounds
+  for (let r = start; r < 12; r++) {
+    s[2] ^= ROUND_CONSTANTS[r]
+    s[0] ^= s[4]; s[4] ^= s[3]; s[2] ^= s[1]
+    const t = [
+      (~s[0] & MASK64) & s[1],
+      (~s[1] & MASK64) & s[2],
+      (~s[2] & MASK64) & s[3],
+      (~s[3] & MASK64) & s[4],
+      (~s[4] & MASK64) & s[0],
+    ]
+    s[0] ^= t[1]; s[1] ^= t[2]; s[2] ^= t[3]; s[3] ^= t[4]; s[4] ^= t[0]
+    s[1] ^= s[0]; s[0] ^= s[4]; s[3] ^= s[2]; s[2] ^= MASK64
+    s[0] ^= rotr(s[0], 19) ^ rotr(s[0], 28)
+    s[1] ^= rotr(s[1], 61) ^ rotr(s[1], 39)
+    s[2] ^= rotr(s[2],  1) ^ rotr(s[2],  6)
+    s[3] ^= rotr(s[3], 10) ^ rotr(s[3], 17)
+    s[4] ^= rotr(s[4],  7) ^ rotr(s[4], 41)
+  }
+  return s
+}
+
+function bytesToBigInts(bytes) {
+  const view = new DataView(bytes.buffer || new Uint8Array(bytes).buffer)
+  const result = []
+  for (let i = 0; i < bytes.length; i += 8) {
+    const hi = view.getUint32(i, false)
+    const lo = view.getUint32(i + 4, false)
+    result.push((BigInt(hi) << 32n) | BigInt(lo))
+  }
+  return result
+}
+
+function bigIntToBytes(val, len = 8) {
+  const arr = new Uint8Array(len)
+  for (let i = len - 1; i >= 0; i--) {
+    arr[i] = Number(val & 0xFFn)
+    val >>= 8n
+  }
+  return arr
+}
+
+const ASCON_IV = 0x80400c0600000000n
+
+function asconEncrypt(keyBytes, nonceBytes, plaintext) {
+  const key = bytesToBigInts(keyBytes)
+  const [k0, k1] = key
+  const [n0, n1] = bytesToBigInts(nonceBytes)
+
+  let state = [ASCON_IV, k0, k1, n0, n1]
+  state = permutation(state, 12)
+  state[3] ^= k0; state[4] ^= k1
+
+  // domain sep (no associated data in demo)
+  state[4] ^= 1n
+
+  // encrypt
+  const pt = new Uint8Array(plaintext)
+  const padded = new Uint8Array(Math.ceil((pt.length + 1) / 8) * 8)
+  padded.set(pt)
+  padded[pt.length] = 0x80
+
+  const ciphertext = []
+  for (let i = 0; i < padded.length - 8; i += 8) {
+    const block = bytesToBigInts(padded.slice(i, i+8))[0]
+    state[0] ^= block
+    ciphertext.push(...bigIntToBytes(state[0]))
+    state = permutation(state, 6)
+  }
+
+  const lastBlock = bytesToBigInts(padded.slice(padded.length - 8))[0]
+  state[0] ^= lastBlock
+  const lastLen = pt.length % 8 || 8
+  ciphertext.push(...bigIntToBytes(state[0]).slice(0, lastLen))
+
+  // finalize
+  state[1] ^= k0; state[2] ^= k1
+  state = permutation(state, 12)
+  state[3] ^= k0; state[4] ^= k1
+
+  const tag = [...bigIntToBytes(state[3]), ...bigIntToBytes(state[4])]
+  return new Uint8Array([...ciphertext, ...tag])
+}
+
+function asconDecrypt(keyBytes, nonceBytes, ctWithTag) {
+  const [k0, k1] = bytesToBigInts(keyBytes)
+  const [n0, n1] = bytesToBigInts(nonceBytes)
+
+  const ct = ctWithTag.slice(0, ctWithTag.length - 16)
+
+  let state = [ASCON_IV, k0, k1, n0, n1]
+  state = permutation(state, 12)
+  state[3] ^= k0; state[4] ^= k1
+  state[4] ^= 1n
+
+  const plaintext = []
+  if (ct.length > 0) {
+    const padLen = ct.length % 8 === 0 ? ct.length : ct.length + (8 - ct.length % 8)
+    const padded = new Uint8Array(padLen)
+    padded.set(ct)
+
+    for (let i = 0; i < padded.length - 8; i += 8) {
+      const block = bytesToBigInts(padded.slice(i, i+8))[0]
+      const pt = state[0] ^ block
+      plaintext.push(...bigIntToBytes(pt))
+      state[0] = block
+      state = permutation(state, 6)
+    }
+
+    const lastLen = ct.length % 8 || 8
+    const lastCt = bytesToBigInts(padded.slice(padded.length - 8))[0]
+    const ptLast = state[0] ^ lastCt
+    const mask = lastLen < 8 ? (MASK64 >> BigInt(lastLen * 8)) : 0n
+    const padding = 0x80n << BigInt((7 - lastLen) * 8)
+    state[0] = (state[0] & mask) ^ lastCt ^ padding
+    plaintext.push(...bigIntToBytes(ptLast).slice(0, lastLen))
+  }
+
+  return new Uint8Array(plaintext)
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+function hexToBytes(hex) {
+  return new Uint8Array(hex.match(/.{2}/g).map(b => parseInt(b, 16)))
+}
+
+function generateNonce() {
+  return crypto.getRandomValues(new Uint8Array(16))
+}
+
+function toBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes))
+}
+
+function fromBase64(b64) {
+  return new Uint8Array(atob(b64).split('').map(c => c.charCodeAt(0)))
+}
+
+// ── Encrypted fetch ───────────────────────────────────────────────────────
+
+async function encryptedPost(path, data) {
+  const psk = hexToBytes(PSK_HEX)
+  const nonce = generateNonce()
+  const pt = new TextEncoder().encode(JSON.stringify(data))
+  const ct = asconEncrypt(psk, nonce, pt)
+
+  const payload = {
+    ciphertext: toBase64(ct),
+    nonce: toBase64(nonce),
+    version: 'ascon-128'
+  }
+
+  const t0 = Date.now()
+  const resp = await fetch(`${GATEWAY}/secure/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  const elapsed = Date.now() - t0
+
+  const respJson = await resp.json()
+  const respCt = fromBase64(respJson.ciphertext)
+  const respNonce = fromBase64(respJson.nonce)
+  const plainResp = asconDecrypt(psk, respNonce, respCt)
+  const result = JSON.parse(new TextDecoder().decode(plainResp))
+
+  return { result, status: resp.status, elapsed, payload, respJson }
+}
+
+// ── Traffic Logger ────────────────────────────────────────────────────────
+
+let sessionToken = null
+let trafficCount = 0
+
+function addTrafficEntry({ method, path, status, elapsed, requestPayload, responsePayload, decodedReq, decodedResp }) {
+  const list = document.getElementById('traffic-list')
+  if (trafficCount === 0) list.innerHTML = ''
+  trafficCount++
+
+  const id = `te-${Date.now()}`
+  const badgeClass = status === 200 || status === 201 ? 'badge-200' : 'badge-401'
+  const now = new Date().toLocaleTimeString('id-ID')
+
+  const el = document.createElement('div')
+  el.className = 'traffic-entry'
+  el.innerHTML = `
+    <div class="traffic-header" onclick="toggleEntry('${id}')">
+      <div class="traffic-meta">
+        <span class="traffic-method">${method}</span>
+        <span class="traffic-path">/${path}</span>
+        <span class="traffic-time">${now} · ${elapsed}ms</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="traffic-badge badge-enc">ASCON-128</span>
+        <span class="traffic-badge ${badgeClass}">${status}</span>
+      </div>
+    </div>
+    <div class="traffic-body" id="${id}">
+      <div class="label">Request Payload (yang terlihat di Wireshark — terenkripsi)</div>
+      <div class="payload">${JSON.stringify(requestPayload)}</div>
+      <div class="label">Request Asli (setelah dekripsi di gateway)</div>
+      <div class="payload plain">${JSON.stringify(decodedReq)}</div>
+      <div class="label">Response Payload (terenkripsi)</div>
+      <div class="payload">${responsePayload.ciphertext.substring(0, 60)}...</div>
+      <div class="label">Response Asli (setelah dekripsi di client)</div>
+      <div class="payload plain">${JSON.stringify(decodedResp)}</div>
+    </div>
+  `
+  list.prepend(el)
+}
+
+function toggleEntry(id) {
+  const el = document.getElementById(id)
+  el.classList.toggle('open')
+}
+
+function clearTraffic() {
+  trafficCount = 0
+  document.getElementById('traffic-list').innerHTML =
+    '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0">Traffic dihapus.</div>'
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alert')
+  el.className = `alert ${type}`
+  el.style.display = 'block'
+  el.textContent = msg
+  setTimeout(() => el.style.display = 'none', 4000)
+}
+
+async function doLogin() {
+  const username = document.getElementById('username').value
+  const password = document.getElementById('password').value
+
+  const btn = document.querySelector('.btn-primary')
+  btn.innerHTML = '<span class="spinner"></span>Mengenkripsi & mengirim...'
+  btn.disabled = true
+
+  try {
+    const { result, status, elapsed, payload, respJson } = await encryptedPost('auth/login', { username, password })
+
+    addTrafficEntry({
+      method: 'POST', path: 'auth/login', status, elapsed,
+      requestPayload: payload, responsePayload: respJson,
+      decodedReq: { username, password: '***' },
+      decodedResp: result
+    })
+
+    if (result.success) {
+      sessionToken = result.token
+      showAlert(`✓ ${result.message}`, 'success')
+      const tb = document.getElementById('token-box')
+      document.getElementById('token-val').textContent = result.token
+      tb.style.display = 'block'
+    } else {
+      showAlert(`✗ ${result.message}`, 'error')
+    }
+  } catch (e) {
+    showAlert('✗ Tidak dapat terhubung ke gateway. Pastikan docker-compose up sudah berjalan.', 'error')
+  }
+
+  btn.innerHTML = 'Login dengan ASCON Encryption'
+  btn.disabled = false
+}
+
+async function doLogout() {
+  if (!sessionToken) { showAlert('Belum login', 'error'); return }
+  try {
+    const { result, status, elapsed, payload, respJson } = await encryptedPost('auth/logout', { token: sessionToken })
+    addTrafficEntry({
+      method: 'POST', path: 'auth/logout', status, elapsed,
+      requestPayload: payload, responsePayload: respJson,
+      decodedReq: { token: sessionToken.substring(0, 16) + '...' },
+      decodedResp: result
+    })
+    sessionToken = null
+    document.getElementById('token-box').style.display = 'none'
+    showAlert('✓ Logout berhasil', 'success')
+  } catch (e) {
+    showAlert('✗ Tidak dapat terhubung ke gateway', 'error')
+  }
+}
+</script>
+</body>
+</html>

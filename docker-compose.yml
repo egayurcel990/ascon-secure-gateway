@@ -1,0 +1,67 @@
+version: "3.9"
+
+# ============================================================
+# ASCON Secure Gateway - Docker Compose
+# ============================================================
+#
+# Arsitektur jaringan:
+#
+#   [Client] ──── public_net ──── [gateway:8000]
+#                                       │
+#                               internal_net
+#                                       │
+#                               [webapp:5000]
+#
+# Client HANYA bisa akses gateway.
+# Webapp TIDAK bisa diakses langsung dari luar.
+# ============================================================
+
+services:
+
+  gateway:
+    build: ./gateway
+    container_name: ascon-gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - WEBAPP_URL=http://webapp:5000
+    networks:
+      - public_net
+      - internal_net
+    depends_on:
+      - webapp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  webapp:
+    build: ./webapp
+    container_name: ascon-webapp
+    volumes:
+      - webapp_data:/data
+    networks:
+      - internal_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  public_net:
+    driver: bridge
+    name: ascon_public
+  internal_net:
+    driver: bridge
+    name: ascon_internal
+    internal: true
+
+volumes:
+  webapp_data:
+    name: ascon_webapp_data

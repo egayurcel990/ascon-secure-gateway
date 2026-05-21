@@ -1,0 +1,37 @@
+# Environment and secrets
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+client/venv/
+
+# Database and runtime data
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Packet captures and screenshots
+captures/*.pcap
+captures/*.pcapng
+captures/*.png
+captures/*.jpg
+captures/*.jpeg
+!captures/README.md
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
