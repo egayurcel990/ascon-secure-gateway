@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASCON Secure Login Demo</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap');
 
   :root {
     --bg: #0a0c10;
@@ -24,7 +24,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -54,8 +54,12 @@
     display: flex; align-items: center; justify-content: center;
   }
   .logo-icon svg { width: 18px; height: 18px; }
-  .logo-text { font-size: 16px; font-weight: 800; letter-spacing: -0.5px; }
-  .logo-text span { color: var(--accent); }
+  .logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
 
   .badge-nist {
     font-family: 'JetBrains Mono', monospace;
@@ -77,10 +81,13 @@
   }
 
   .panel-title {
-    font-size: 28px; font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 8px;
-  }
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -2px;
+  margin-bottom: 10px;
+}
   .panel-sub {
     font-size: 13px;
     color: var(--muted);
@@ -117,17 +124,16 @@
   }
 
   .btn {
-    width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-top: 8px;
-  }
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+  margin-top: 10px;
+}
   .btn-primary {
     background: var(--accent);
     color: #000;
@@ -135,12 +141,25 @@
   .btn-primary:hover { filter: brightness(1.1); }
   .btn-primary:active { transform: scale(0.98); }
   .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    margin-top: 10px;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  width: 100%;
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all .2s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  background: rgba(0,255,180,.06);
+  color: var(--accent);
+}
 
   .divider {
     display: flex; align-items: center; gap: 12px;
@@ -195,7 +214,7 @@
   .btn-clear {
     font-size: 12px; color: var(--muted);
     background: none; border: none; cursor: pointer;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
   }
   .btn-clear:hover { color: var(--danger); }
 
@@ -336,6 +355,40 @@
     margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+@media (max-width: 1100px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 </style>
 </head>
 <body>
@@ -372,17 +425,17 @@
     Login dengan ASCON Encryption
   </button>
   <button class="btn btn-secondary" onclick="doLogout()">Logout</button>
+  <button class="btn-secondary" onclick="runSecurityTests()">Run Security Test</button>
 
   <div id="alert" class="alert"></div>
   <div id="token-box" class="token-box">
-    <span class="tlabel">Session Token (terenkripsi saat transit)</span>
+    <span class="tlabel">Session Token</span>
     <span id="token-val"></span>
   </div>
 
-  <div class="divider">Demo Akun</div>
+  <div class="divider"></div>
   <div class="hint">
-    admin / admin123<br>
-    alice / user123
+    *Setelah login berhasil, buka tab "Network" di DevTools browser dan lihat request yang dikirim. Terlihat bahwa payloadnya terenkripsi, dan hanya bisa didekripsi dengan kunci yang benar di gateway.
   </div>
 </div>
 
@@ -408,6 +461,48 @@
     <span style="color:#555">↑ Yang terlihat di Wireshark: ciphertext saja ↑</span>
   </div>
 
+  <div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Total</div>
+    <div class="metric-value" id="m-total">0</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Secure</div>
+    <div class="metric-value" id="m-secure">0</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Decrypt OK</div>
+    <div class="metric-value" id="m-success">0</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Decrypt Fail</div>
+    <div class="metric-value" id="m-fail">0</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Replay</div>
+    <div class="metric-value" id="m-replay">0</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Encrypt</div>
+    <div class="metric-value" id="m-enc">0 ms</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Decrypt</div>
+    <div class="metric-value" id="m-dec">0 ms</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Latency</div>
+    <div class="metric-value" id="m-lat">0 ms</div>
+  </div>
+</div>
+
   <div class="traffic-list" id="traffic-list">
     <div style="color:var(--muted); font-size:13px; text-align:center; padding: 24px 0;">
       Belum ada request. Coba login di sebelah kiri.
@@ -416,22 +511,14 @@
 </div>
 
 <script>
-const GATEWAY = 'http://172.31.184.11:8000'
+const DEFAULT_GATEWAY = 'http://localhost:8000'
+const GATEWAY = localStorage.getItem('ASCON_GATEWAY') || DEFAULT_GATEWAY
 const PSK_HEX = 'deadbeefcafebabedeadbeefcafebabe'
 
-// ── ASCON-128 implementation (inline, identik dengan ascon.py) ─────────────
-
-function rotr64(lo, hi, n) {
-  if (n < 32) {
-    return { lo: (lo >>> n) | (hi << (32-n)), hi: (hi >>> n) | (lo << (32-n)) }
-  }
-  n -= 32
-  return { lo: (hi >>> n) | (lo << (32-n)), hi: (lo >>> n) | (hi << (32-n)) }
-}
-
-// Kita pakai BigInt untuk kemudahan implementasi 64-bit
 const ROUND_CONSTANTS = [0xf0n, 0xe1n, 0xd2n, 0xc3n, 0xb4n, 0xa5n, 0x96n, 0x87n, 0x78n, 0x69n, 0x5an, 0x4bn]
 const MASK64 = 0xFFFFFFFFFFFFFFFFn
+const ASCON_IV = 0x80400c0600000000n
+const TAG_LEN = 16
 
 function rotr(val, n) {
   n = BigInt(n)
@@ -441,9 +528,13 @@ function rotr(val, n) {
 function permutation(state, rounds) {
   let s = [...state]
   const start = 12 - rounds
+
   for (let r = start; r < 12; r++) {
     s[2] ^= ROUND_CONSTANTS[r]
-    s[0] ^= s[4]; s[4] ^= s[3]; s[2] ^= s[1]
+    s[0] ^= s[4]
+    s[4] ^= s[3]
+    s[2] ^= s[1]
+
     const t = [
       (~s[0] & MASK64) & s[1],
       (~s[1] & MASK64) & s[2],
@@ -451,117 +542,191 @@ function permutation(state, rounds) {
       (~s[3] & MASK64) & s[4],
       (~s[4] & MASK64) & s[0],
     ]
-    s[0] ^= t[1]; s[1] ^= t[2]; s[2] ^= t[3]; s[3] ^= t[4]; s[4] ^= t[0]
-    s[1] ^= s[0]; s[0] ^= s[4]; s[3] ^= s[2]; s[2] ^= MASK64
+
+    s[0] ^= t[1]
+    s[1] ^= t[2]
+    s[2] ^= t[3]
+    s[3] ^= t[4]
+    s[4] ^= t[0]
+
+    s[1] ^= s[0]
+    s[0] ^= s[4]
+    s[3] ^= s[2]
+    s[2] ^= MASK64
+
     s[0] ^= rotr(s[0], 19) ^ rotr(s[0], 28)
     s[1] ^= rotr(s[1], 61) ^ rotr(s[1], 39)
-    s[2] ^= rotr(s[2],  1) ^ rotr(s[2],  6)
+    s[2] ^= rotr(s[2], 1) ^ rotr(s[2], 6)
     s[3] ^= rotr(s[3], 10) ^ rotr(s[3], 17)
-    s[4] ^= rotr(s[4],  7) ^ rotr(s[4], 41)
+    s[4] ^= rotr(s[4], 7) ^ rotr(s[4], 41)
   }
+
   return s
 }
 
-function bytesToBigInts(bytes) {
-  const view = new DataView(bytes.buffer || new Uint8Array(bytes).buffer)
-  const result = []
+function wordToBytes(word) {
+  const out = new Uint8Array(8)
+  for (let i = 7; i >= 0; i--) {
+    out[i] = Number(word & 0xffn)
+    word >>= 8n
+  }
+  return out
+}
+
+function bytesToWord(bytes) {
+  let word = 0n
+  for (const b of bytes) word = (word << 8n) | BigInt(b)
+  return word & MASK64
+}
+
+function bytesToWords(bytes) {
+  const words = []
   for (let i = 0; i < bytes.length; i += 8) {
-    const hi = view.getUint32(i, false)
-    const lo = view.getUint32(i + 4, false)
-    result.push((BigInt(hi) << 32n) | BigInt(lo))
+    words.push(bytesToWord(bytes.slice(i, i + 8)))
   }
-  return result
+  return words
 }
 
-function bigIntToBytes(val, len = 8) {
-  const arr = new Uint8Array(len)
-  for (let i = len - 1; i >= 0; i--) {
-    arr[i] = Number(val & 0xFFn)
-    val >>= 8n
+function concatBytes(...arrays) {
+  const total = arrays.reduce((sum, arr) => sum + arr.length, 0)
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const arr of arrays) {
+    out.set(arr, offset)
+    offset += arr.length
   }
-  return arr
+  return out
 }
 
-const ASCON_IV = 0x80400c0600000000n
+function equalBytes(a, b) {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i]
+  return diff === 0
+}
 
-function asconEncrypt(keyBytes, nonceBytes, plaintext) {
-  const key = bytesToBigInts(keyBytes)
-  const [k0, k1] = key
-  const [n0, n1] = bytesToBigInts(nonceBytes)
+function padAssociatedData(ad) {
+  const padLen = 7 - (ad.length % 8)
+  const padded = new Uint8Array(ad.length + 1 + padLen)
+  padded.set(ad)
+  padded[ad.length] = 0x80
+  return padded
+}
+
+function initState(keyBytes, nonceBytes) {
+  const [k0, k1] = bytesToWords(keyBytes)
+  const [n0, n1] = bytesToWords(nonceBytes)
 
   let state = [ASCON_IV, k0, k1, n0, n1]
   state = permutation(state, 12)
-  state[3] ^= k0; state[4] ^= k1
+  state[3] ^= k0
+  state[4] ^= k1
 
-  // domain sep (no associated data in demo)
-  state[4] ^= 1n
-
-  // encrypt
-  const pt = new Uint8Array(plaintext)
-  const padded = new Uint8Array(Math.ceil((pt.length + 1) / 8) * 8)
-  padded.set(pt)
-  padded[pt.length] = 0x80
-
-  const ciphertext = []
-  for (let i = 0; i < padded.length - 8; i += 8) {
-    const block = bytesToBigInts(padded.slice(i, i+8))[0]
-    state[0] ^= block
-    ciphertext.push(...bigIntToBytes(state[0]))
-    state = permutation(state, 6)
-  }
-
-  const lastBlock = bytesToBigInts(padded.slice(padded.length - 8))[0]
-  state[0] ^= lastBlock
-  const lastLen = pt.length % 8 || 8
-  ciphertext.push(...bigIntToBytes(state[0]).slice(0, lastLen))
-
-  // finalize
-  state[1] ^= k0; state[2] ^= k1
-  state = permutation(state, 12)
-  state[3] ^= k0; state[4] ^= k1
-
-  const tag = [...bigIntToBytes(state[3]), ...bigIntToBytes(state[4])]
-  return new Uint8Array([...ciphertext, ...tag])
+  return { state, k0, k1 }
 }
 
-function asconDecrypt(keyBytes, nonceBytes, ctWithTag) {
-  const [k0, k1] = bytesToBigInts(keyBytes)
-  const [n0, n1] = bytesToBigInts(nonceBytes)
-
-  const ct = ctWithTag.slice(0, ctWithTag.length - 16)
-
-  let state = [ASCON_IV, k0, k1, n0, n1]
-  state = permutation(state, 12)
-  state[3] ^= k0; state[4] ^= k1
-  state[4] ^= 1n
-
-  const plaintext = []
-  if (ct.length > 0) {
-    const padLen = ct.length % 8 === 0 ? ct.length : ct.length + (8 - ct.length % 8)
-    const padded = new Uint8Array(padLen)
-    padded.set(ct)
-
-    for (let i = 0; i < padded.length - 8; i += 8) {
-      const block = bytesToBigInts(padded.slice(i, i+8))[0]
-      const pt = state[0] ^ block
-      plaintext.push(...bigIntToBytes(pt))
-      state[0] = block
+function absorbAssociatedData(state, associatedData) {
+  if (associatedData.length > 0) {
+    const padded = padAssociatedData(associatedData)
+    for (let i = 0; i < padded.length; i += 8) {
+      state[0] ^= bytesToWord(padded.slice(i, i + 8))
       state = permutation(state, 6)
     }
-
-    const lastLen = ct.length % 8 || 8
-    const lastCt = bytesToBigInts(padded.slice(padded.length - 8))[0]
-    const ptLast = state[0] ^ lastCt
-    const mask = lastLen < 8 ? (MASK64 >> BigInt(lastLen * 8)) : 0n
-    const padding = 0x80n << BigInt((7 - lastLen) * 8)
-    state[0] = (state[0] & mask) ^ lastCt ^ padding
-    plaintext.push(...bigIntToBytes(ptLast).slice(0, lastLen))
   }
 
-  return new Uint8Array(plaintext)
+  state[4] ^= 1n
+  return state
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+function asconEncrypt(keyBytes, nonceBytes, plaintext, associatedData = new Uint8Array()) {
+  const { k0, k1, state: initialState } = initState(keyBytes, nonceBytes)
+  let state = absorbAssociatedData(initialState, associatedData)
+
+  const ciphertextParts = []
+  let offset = 0
+
+  while (offset + 8 <= plaintext.length) {
+    const block = bytesToWord(plaintext.slice(offset, offset + 8))
+    state[0] ^= block
+    ciphertextParts.push(wordToBytes(state[0]))
+    state = permutation(state, 6)
+    offset += 8
+  }
+
+  const remaining = plaintext.slice(offset)
+  const finalBlock = new Uint8Array(8)
+  finalBlock.set(remaining)
+  finalBlock[remaining.length] = 0x80
+
+  state[0] ^= bytesToWord(finalBlock)
+  if (remaining.length > 0) {
+    ciphertextParts.push(wordToBytes(state[0]).slice(0, remaining.length))
+  }
+
+  state[1] ^= k0
+  state[2] ^= k1
+  state = permutation(state, 12)
+  state[3] ^= k0
+  state[4] ^= k1
+
+  const tag = concatBytes(wordToBytes(state[3]), wordToBytes(state[4]))
+  return concatBytes(...ciphertextParts, tag)
+}
+
+function asconDecrypt(keyBytes, nonceBytes, ciphertextWithTag, associatedData = new Uint8Array()) {
+  if (ciphertextWithTag.length < TAG_LEN) throw new Error('ciphertext terlalu pendek')
+
+  const ciphertext = ciphertextWithTag.slice(0, ciphertextWithTag.length - TAG_LEN)
+  const receivedTag = ciphertextWithTag.slice(ciphertextWithTag.length - TAG_LEN)
+
+  const { k0, k1, state: initialState } = initState(keyBytes, nonceBytes)
+  let state = absorbAssociatedData(initialState, associatedData)
+
+  const plaintextParts = []
+  let offset = 0
+
+  while (offset + 8 <= ciphertext.length) {
+    const cWord = bytesToWord(ciphertext.slice(offset, offset + 8))
+    const pWord = state[0] ^ cWord
+    plaintextParts.push(wordToBytes(pWord))
+    state[0] = cWord
+    state = permutation(state, 6)
+    offset += 8
+  }
+
+  const remaining = ciphertext.slice(offset)
+
+  if (remaining.length > 0) {
+    const stream = wordToBytes(state[0])
+    const pLast = new Uint8Array(remaining.length)
+
+    for (let i = 0; i < remaining.length; i++) {
+      pLast[i] = remaining[i] ^ stream[i]
+    }
+
+    plaintextParts.push(pLast)
+
+    const paddedPlain = new Uint8Array(8)
+    paddedPlain.set(pLast)
+    paddedPlain[pLast.length] = 0x80
+    state[0] ^= bytesToWord(paddedPlain)
+  } else {
+    state[0] ^= 0x8000000000000000n
+  }
+
+  state[1] ^= k0
+  state[2] ^= k1
+  state = permutation(state, 12)
+  state[3] ^= k0
+  state[4] ^= k1
+
+  const calculatedTag = concatBytes(wordToBytes(state[3]), wordToBytes(state[4]))
+  if (!equalBytes(receivedTag, calculatedTag)) {
+    throw new Error('authentication tag invalid')
+  }
+
+  return concatBytes(...plaintextParts)
+}
 
 function hexToBytes(hex) {
   return new Uint8Array(hex.match(/.{2}/g).map(b => parseInt(b, 16)))
@@ -572,26 +737,62 @@ function generateNonce() {
 }
 
 function toBase64(bytes) {
-  return btoa(String.fromCharCode(...bytes))
+  let binary = ''
+  bytes.forEach(b => binary += String.fromCharCode(b))
+  return btoa(binary)
 }
 
 function fromBase64(b64) {
   return new Uint8Array(atob(b64).split('').map(c => c.charCodeAt(0)))
 }
 
-// ── Encrypted fetch ───────────────────────────────────────────────────────
+function canonicalJson(data) {
+  if (Array.isArray(data)) {
+    return '[' + data.map(canonicalJson).join(',') + ']'
+  }
+
+  if (data !== null && typeof data === 'object') {
+    return '{' + Object.keys(data).sort().map(key => {
+      return JSON.stringify(key) + ':' + canonicalJson(data[key])
+    }).join(',') + '}'
+  }
+
+  return JSON.stringify(data)
+}
+
+function buildAad(path, method = 'POST') {
+  return {
+    client_id: 'browser-ui',
+    request_id: crypto.randomUUID(),
+    timestamp: Math.floor(Date.now() / 1000),
+    path,
+    method
+  }
+}
+
+function encodeEncrypted(ciphertextWithTag, nonce, aad) {
+  const ciphertext = ciphertextWithTag.slice(0, ciphertextWithTag.length - TAG_LEN)
+  const tag = ciphertextWithTag.slice(ciphertextWithTag.length - TAG_LEN)
+
+  return {
+    version: 'ascon-aead128',
+    key_id: 'key-v1',
+    nonce: toBase64(nonce),
+    ciphertext: toBase64(ciphertext),
+    tag: toBase64(tag),
+    aad
+  }
+}
 
 async function encryptedPost(path, data) {
   const psk = hexToBytes(PSK_HEX)
   const nonce = generateNonce()
+  const aad = buildAad(path, 'POST')
+  const aadBytes = new TextEncoder().encode(canonicalJson(aad))
   const pt = new TextEncoder().encode(JSON.stringify(data))
-  const ct = asconEncrypt(psk, nonce, pt)
 
-  const payload = {
-    ciphertext: toBase64(ct),
-    nonce: toBase64(nonce),
-    version: 'ascon-128'
-  }
+  const ctWithTag = asconEncrypt(psk, nonce, pt, aadBytes)
+  const payload = encodeEncrypted(ctWithTag, nonce, aad)
 
   const t0 = Date.now()
   const resp = await fetch(`${GATEWAY}/secure/${path}`, {
@@ -602,15 +803,19 @@ async function encryptedPost(path, data) {
   const elapsed = Date.now() - t0
 
   const respJson = await resp.json()
-  const respCt = fromBase64(respJson.ciphertext)
-  const respNonce = fromBase64(respJson.nonce)
-  const plainResp = asconDecrypt(psk, respNonce, respCt)
+
+  if (!resp.ok) {
+    return { result: respJson, status: resp.status, elapsed, payload, respJson }
+  }
+
+  const responseAadBytes = new TextEncoder().encode(canonicalJson(respJson.aad))
+  const responseCt = concatBytes(fromBase64(respJson.ciphertext), fromBase64(respJson.tag))
+  const responseNonce = fromBase64(respJson.nonce)
+  const plainResp = asconDecrypt(psk, responseNonce, responseCt, responseAadBytes)
   const result = JSON.parse(new TextDecoder().decode(plainResp))
 
   return { result, status: resp.status, elapsed, payload, respJson }
 }
-
-// ── Traffic Logger ────────────────────────────────────────────────────────
 
 let sessionToken = null
 let trafficCount = 0
@@ -623,6 +828,9 @@ function addTrafficEntry({ method, path, status, elapsed, requestPayload, respon
   const id = `te-${Date.now()}`
   const badgeClass = status === 200 || status === 201 ? 'badge-200' : 'badge-401'
   const now = new Date().toLocaleTimeString('id-ID')
+  const responseSummary = responsePayload.ciphertext
+    ? `${responsePayload.ciphertext.substring(0, 60)}...`
+    : JSON.stringify(responsePayload)
 
   const el = document.createElement('div')
   el.className = 'traffic-entry'
@@ -634,18 +842,18 @@ function addTrafficEntry({ method, path, status, elapsed, requestPayload, respon
         <span class="traffic-time">${now} · ${elapsed}ms</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <span class="traffic-badge badge-enc">ASCON-128</span>
+        <span class="traffic-badge badge-enc">ASCON-AEAD128</span>
         <span class="traffic-badge ${badgeClass}">${status}</span>
       </div>
     </div>
     <div class="traffic-body" id="${id}">
       <div class="label">Request Payload (yang terlihat di Wireshark — terenkripsi)</div>
       <div class="payload">${JSON.stringify(requestPayload)}</div>
-      <div class="label">Request Asli (setelah dekripsi di gateway)</div>
+      <div class="label">Request Asli (sebelum enkripsi di browser)</div>
       <div class="payload plain">${JSON.stringify(decodedReq)}</div>
       <div class="label">Response Payload (terenkripsi)</div>
-      <div class="payload">${responsePayload.ciphertext.substring(0, 60)}...</div>
-      <div class="label">Response Asli (setelah dekripsi di client)</div>
+      <div class="payload">${responseSummary}</div>
+      <div class="label">Response Asli (setelah dekripsi di browser)</div>
       <div class="payload plain">${JSON.stringify(decodedResp)}</div>
     </div>
   `
@@ -662,8 +870,6 @@ function clearTraffic() {
   document.getElementById('traffic-list').innerHTML =
     '<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px 0">Traffic dihapus.</div>'
 }
-
-// ── Actions ───────────────────────────────────────────────────────────────
 
 function showAlert(msg, type) {
   const el = document.getElementById('alert')
@@ -685,11 +891,17 @@ async function doLogin() {
     const { result, status, elapsed, payload, respJson } = await encryptedPost('auth/login', { username, password })
 
     addTrafficEntry({
-      method: 'POST', path: 'auth/login', status, elapsed,
-      requestPayload: payload, responsePayload: respJson,
+      method: 'POST',
+      path: 'auth/login',
+      status,
+      elapsed,
+      requestPayload: payload,
+      responsePayload: respJson,
       decodedReq: { username, password: '***' },
       decodedResp: result
     })
+
+    loadMetrics()
 
     if (result.success) {
       sessionToken = result.token
@@ -698,10 +910,11 @@ async function doLogin() {
       document.getElementById('token-val').textContent = result.token
       tb.style.display = 'block'
     } else {
-      showAlert(`✗ ${result.message}`, 'error')
+      showAlert(`✗ ${result.message || result.error}`, 'error')
     }
   } catch (e) {
-    showAlert('✗ Tidak dapat terhubung ke gateway. Pastikan docker-compose up sudah berjalan.', 'error')
+    console.error(e)
+    showAlert(`✗ Tidak dapat terhubung/dekripsi gagal: ${e.message}`, 'error')
   }
 
   btn.innerHTML = 'Login dengan ASCON Encryption'
@@ -709,20 +922,187 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  if (!sessionToken) { showAlert('Belum login', 'error'); return }
+  if (!sessionToken) {
+    showAlert('Belum login', 'error')
+    return
+  }
+
   try {
     const { result, status, elapsed, payload, respJson } = await encryptedPost('auth/logout', { token: sessionToken })
+
     addTrafficEntry({
-      method: 'POST', path: 'auth/logout', status, elapsed,
-      requestPayload: payload, responsePayload: respJson,
+      method: 'POST',
+      path: 'auth/logout',
+      status,
+      elapsed,
+      requestPayload: payload,
+      responsePayload: respJson,
       decodedReq: { token: sessionToken.substring(0, 16) + '...' },
       decodedResp: result
     })
+
+    loadMetrics()
+
     sessionToken = null
     document.getElementById('token-box').style.display = 'none'
     showAlert('✓ Logout berhasil', 'success')
   } catch (e) {
-    showAlert('✗ Tidak dapat terhubung ke gateway', 'error')
+    console.error(e)
+    showAlert(`✗ Tidak dapat terhubung/dekripsi gagal: ${e.message}`, 'error')
+  }
+}
+async function loadMetrics() {
+  try {
+    const resp = await fetch(`${GATEWAY}/metrics`)
+    const data = await resp.json()
+
+    document.getElementById('m-total').textContent = data.requests_total ?? 0
+    document.getElementById('m-secure').textContent = data.secure_requests_total ?? 0
+    document.getElementById('m-success').textContent = data.decrypt_success ?? 0
+    document.getElementById('m-fail').textContent = data.decrypt_failures ?? 0
+    document.getElementById('m-replay').textContent = data.replay_rejected ?? 0
+    document.getElementById('m-enc').textContent = `${data.avg_encrypt_ms ?? 0} ms`
+    document.getElementById('m-dec').textContent = `${data.avg_decrypt_ms ?? 0} ms`
+    document.getElementById('m-lat').textContent = `${data.avg_request_latency_ms ?? 0} ms`
+  } catch (e) {
+    console.error('Metrics load failed:', e)
+  }
+}
+
+loadMetrics()
+setInterval(loadMetrics, 2000)
+async function runSecurityTests() {
+  showAlert('Menjalankan security test...', 'success')
+
+  try {
+    /*
+      =========================================
+      TEST 1 - SECURE LOGIN
+      =========================================
+    */
+    const secure = await encryptedPost('auth/login', {
+      username: 'admin',
+      password: 'admin123'
+    })
+
+    addTrafficEntry({
+      method: 'POST',
+      path: 'auth/login',
+      status: secure.status,
+      elapsed: secure.elapsed,
+      requestPayload: secure.payload,
+      responsePayload: secure.respJson,
+      decodedReq: { username: 'admin', password: '***' },
+      decodedResp: secure.result
+    })
+
+    /*
+      =========================================
+      TEST 2 - REPLAY ATTACK
+      =========================================
+    */
+    const replayResp = await fetch(`${GATEWAY}/secure/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(secure.payload)
+    })
+
+    const replayJson = await replayResp.json()
+
+    addTrafficEntry({
+      method: 'POST',
+      path: 'auth/login',
+      status: replayResp.status,
+      elapsed: 0,
+      requestPayload: secure.payload,
+      responsePayload: replayJson,
+      decodedReq: {
+        replay_attack: true
+      },
+      decodedResp: replayJson
+    })
+
+    /*
+      =========================================
+      TEST 3 - TAMPERED CIPHERTEXT
+      =========================================
+    */
+    const tampered = JSON.parse(JSON.stringify(secure.payload))
+
+    tampered.ciphertext =
+      tampered.ciphertext.substring(0, tampered.ciphertext.length - 2) + 'AA'
+
+    const tamperedResp = await fetch(`${GATEWAY}/secure/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(tampered)
+    })
+
+    const tamperedJson = await tamperedResp.json()
+
+    addTrafficEntry({
+      method: 'POST',
+      path: 'auth/login',
+      status: tamperedResp.status,
+      elapsed: 0,
+      requestPayload: tampered,
+      responsePayload: tamperedJson,
+      decodedReq: {
+        tampered_ciphertext: true
+      },
+      decodedResp: tamperedJson
+    })
+
+    /*
+      =========================================
+      TEST 4 - INSECURE PLAINTEXT REQUEST
+      =========================================
+    */
+    const insecurePayload = {
+      username: 'admin',
+      password: 'admin123'
+    }
+
+    const t0 = performance.now()
+
+    const insecureResp = await fetch(`${GATEWAY}/insecure/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(insecurePayload)
+    })
+
+    const insecureJson = await insecureResp.json()
+
+    const t1 = performance.now()
+
+    addTrafficEntry({
+      method: 'POST',
+      path: 'insecure/auth/login',
+      status: insecureResp.status,
+      elapsed: Math.round(t1 - t0),
+      requestPayload: insecurePayload,
+      responsePayload: insecureJson,
+      decodedReq: insecurePayload,
+      decodedResp: insecureJson
+    })
+
+    /*
+      =========================================
+      REFRESH METRICS
+      =========================================
+    */
+    await loadMetrics()
+
+    showAlert('✓ Security testing selesai', 'success')
+  } catch (e) {
+    console.error(e)
+    showAlert(`✗ Security test gagal: ${e.message}`, 'error')
   }
 }
 </script>
