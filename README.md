@@ -2,6 +2,11 @@
 
 Docker-based lightweight secure communication gateway implementing ASCON-AEAD authenticated encryption for confidential client-server communication.
 
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
+![FastAPI](https://img.shields.io/badge/FastAPI-Gateway-009688)
+![ASCON](https://img.shields.io/badge/Crypto-ASCON--AEAD128-orange)
+![Status](https://img.shields.io/badge/Status-Research%20Prototype-success)
 ---
 
 # Overview
@@ -23,6 +28,41 @@ The system implements:
 This project demonstrates how lightweight cryptography can be integrated into containerized microservice communication while maintaining relatively low performance overhead.
 
 ---
+
+# Demo Preview
+
+## Browser-side Encrypted Login UI
+
+![UI Preview](docs/images/ui-preview.png)
+
+## Secure Traffic Analysis
+
+![Wireshark Preview](docs/images/wireshark-preview.png)
+
+# Threat Model
+
+| Threat | Status |
+|---|---|
+| Plaintext Credential Exposure | Mitigated |
+| Replay Attack | Mitigated |
+| Ciphertext Tampering | Mitigated |
+| Unauthorized Payload Modification | Mitigated |
+| Endpoint Compromise | Not Covered |
+| Key Leakage | Not Covered |
+| TLS Downgrade Attack | Not Covered |
+
+# Technologies Used
+
+| Category | Technology |
+|---|---|
+| Encryption | ASCON-AEAD128 |
+| Backend Gateway | FastAPI |
+| Internal Service | Flask |
+| Containerization | Docker Compose |
+| Metrics | Custom Runtime Metrics |
+| Visualization | Matplotlib |
+| Traffic Analysis | Wireshark / tcpdump |
+| Frontend | HTML, CSS, Vanilla JavaScript |
 
 # Key Features
 
@@ -222,7 +262,7 @@ ascon-secure-gateway/
 
 ---
 
-# Quick Start
+# Run and Test
 
 ## 1. Clone Repository
 
@@ -231,37 +271,208 @@ git clone https://github.com/egayurcel990/ascon-secure-gateway.git
 cd ascon-secure-gateway
 ```
 
----
-
-## 2. Configure Environment
+## 2. Create Environment File
 
 ```bash
 cp .env.example .env
 ```
 
----
-
-## 3. Build Containers
+## 3. Build and Start Containers
 
 ```bash
 docker compose up -d --build
 ```
 
----
+Check container status:
 
-## 4. Run Demo
+```bash
+docker compose ps
+```
+
+Check gateway health:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Expected result:
+
+```json
+{
+  "status": "ok",
+  "service": "ascon-aead-gateway",
+  "version": "1.2.0"
+}
+```
+
+## 4. Run CLI Security Demo
 
 ```bash
 cd client
 python3 demo.py
 ```
 
----
+This demo validates:
 
-## 5. Run Benchmark
+- encrypted login request
+- login failure handling
+- token verification
+- logout
+- replay attack rejection
+- tampered ciphertext rejection
+- insecure plaintext comparison
+
+## 5. Run Browser Web UI
+
+From the project root:
 
 ```bash
+cd client
+python3 -m http.server 3000
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+Use demo credentials:
+
+```text
+username: admin
+password: admin123
+```
+
+The web UI provides:
+
+- browser-side ASCON-AEAD encryption
+- encrypted login testing
+- traffic monitor
+- realtime security metrics
+- Run Security Test button
+- secure vs insecure request comparison
+
+## 6. Run Automated Security Test from UI
+
+Click:
+
+```text
+Run Security Test
+```
+
+The UI will automatically test:
+
+- secure encrypted login
+- replay attack rejection
+- tampered ciphertext rejection
+- insecure plaintext request comparison
+- metrics update
+
+Expected result:
+
+| Test | Expected Result |
+|---|---|
+| Secure Login | 200 OK |
+| Replay Attack | 400 Rejected |
+| Tampered Ciphertext | 400 Rejected |
+| Insecure Login | 200 OK, plaintext visible |
+
+## 7. Check Runtime Metrics
+
+```bash
+curl http://localhost:8000/metrics
+```
+
+Example output:
+
+```json
+{
+  "requests_total": 10,
+  "secure_requests_total": 9,
+  "insecure_requests_total": 1,
+  "decrypt_success": 7,
+  "decrypt_failures": 1,
+  "replay_rejected": 1,
+  "tampered_rejected": 1,
+  "avg_encrypt_ms": 1.085,
+  "avg_decrypt_ms": 1.2959,
+  "avg_request_latency_ms": 20.9292
+}
+```
+
+## 8. Capture Traffic with PCAP
+
+Start capture:
+
+```bash
+sudo tcpdump -i any port 8000 -w captures/ascon-demo.pcap
+```
+
+Run CLI demo or browser UI test.
+
+Stop capture:
+
+```text
+CTRL + C
+```
+
+Open the `.pcap` file in Wireshark.
+
+Useful Wireshark filters:
+
+```text
+frame contains "ciphertext"
+```
+
+```text
+frame contains "password"
+```
+
+Expected result:
+
+- `/secure/auth/login` only exposes ciphertext, nonce, tag, and AAD.
+- `/insecure/auth/login` exposes username and password in plaintext.
+
+## 9. Run Benchmark
+
+From project root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install requests matplotlib
 python3 scripts/benchmark.py
+```
+
+This generates:
+
+```text
+benchmark-result.json
+```
+
+## 10. Generate Benchmark Charts
+
+```bash
+python3 scripts/generate_benchmark_chart.py
+```
+
+Generated charts are saved to:
+
+```text
+docs/images/
+```
+
+## 11. Stop Containers
+
+```bash
+docker compose down
+```
+
+To remove volumes:
+
+```bash
+docker compose down -v
 ```
 
 ---
