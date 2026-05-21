@@ -3,7 +3,9 @@ FROM python:3.12-slim
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    apt-get update -q && apt-get install -y -q tcpdump && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ascon.py .
 COPY metrics.py .

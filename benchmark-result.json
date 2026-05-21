@@ -9,25 +9,25 @@
     "insecure": {
       "requests": 50,
       "success_rate": 100.0,
-      "avg_latency_ms": 13.874,
-      "min_latency_ms": 11.939,
-      "max_latency_ms": 30.534,
-      "p95_latency_ms": 17.905,
+      "avg_latency_ms": 20.631,
+      "min_latency_ms": 16.616,
+      "max_latency_ms": 32.895,
+      "p95_latency_ms": 29.538,
       "avg_payload_size_bytes": 45
     },
     "secure_ascon_aead": {
       "requests": 50,
       "success_rate": 100.0,
-      "avg_latency_ms": 15.49,
-      "min_latency_ms": 13.714,
-      "max_latency_ms": 20.794,
-      "p95_latency_ms": 20.028,
+      "avg_latency_ms": 22.014,
+      "min_latency_ms": 19.178,
+      "max_latency_ms": 28.586,
+      "p95_latency_ms": 27.156,
       "avg_payload_size_bytes": 355
     }
   },
   "overhead": {
-    "avg_latency_overhead_ms": 1.616,
-    "p95_latency_overhead_ms": 2.123,
+    "avg_latency_overhead_ms": 1.383,
+    "p95_latency_overhead_ms": -2.382,
     "payload_overhead_bytes": 310
   }
 }
