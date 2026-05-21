@@ -1,519 +1,294 @@
 # ASCON-AEAD Secure Gateway
 
-Docker-based lightweight secure communication gateway implementing ASCON-AEAD authenticated encryption for confidential client-server communication.
+> Docker-based encrypted communication gateway · NIST Lightweight Cryptography Standard 2023
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
-![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED)
-![FastAPI](https://img.shields.io/badge/FastAPI-Gateway-009688)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![ASCON](https://img.shields.io/badge/Crypto-ASCON--AEAD128-orange)
 ![Status](https://img.shields.io/badge/Status-Research%20Prototype-success)
----
+![Focus](https://img.shields.io/badge/CIA%20Triad-Confidentiality-red)
 
-# Overview
-
-ASCON-AEAD Secure Gateway is a containerized reverse proxy architecture that provides an encryption layer between external clients and internal web services.
-
-The system implements:
-
-- ASCON-AEAD128 authenticated encryption
-- Authentication tag verification
-- Associated Data (AAD) validation
-- Replay attack protection
-- Tampered ciphertext rejection
-- Secure encrypted API communication
-- Docker network segmentation
-- Runtime security metrics
-- Benchmark and traffic analysis
-
-This project demonstrates how lightweight cryptography can be integrated into containerized microservice communication while maintaining relatively low performance overhead.
+A containerized reverse proxy that encrypts all client-server communication using **ASCON-AEAD128** — implemented from scratch in pure Python, with no TLS or external cryptography libraries.
 
 ---
 
-# Demo Preview
+## Architecture
 
-## Browser-side Encrypted Login UI
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         public_net                              │
+│                                                                 │
+│   ┌──────────┐   ASCON-AEAD encrypted payload   ┌───────────┐  │
+│   │  Client  │ ─────────────────────────────▶   │  Gateway  │  │
+│   │          │ ◀─────────────────────────────   │   :8000   │  │
+│   └──────────┘                                  └─────┬─────┘  │
+└──────────────────────────────────────────────────────┼─────────┘
+                                            internal_net│ (isolated)
+                                                 ┌──────▼──────┐
+                                                 │   WebApp    │
+                                                 │   :5000     │
+                                                 │  (SQLite)   │
+                                                 └─────────────┘
+```
 
-![UI Preview](docs/images/ui-preview.png)
+The **WebApp is never directly reachable** from outside Docker. All traffic passes through the Gateway, which handles all encryption and decryption transparently.
 
-## Secure Traffic Analysis
-
-![Wireshark Preview](docs/images/wireshark-preview.png)
-
-# Threat Model
-
-| Threat | Status |
-|---|---|
-| Plaintext Credential Exposure | Mitigated |
-| Replay Attack | Mitigated |
-| Ciphertext Tampering | Mitigated |
-| Unauthorized Payload Modification | Mitigated |
-| Endpoint Compromise | Not Covered |
-| Key Leakage | Not Covered |
-| TLS Downgrade Attack | Not Covered |
-
-# Technologies Used
-
-| Category | Technology |
-|---|---|
-| Encryption | ASCON-AEAD128 |
-| Backend Gateway | FastAPI |
-| Internal Service | Flask |
-| Containerization | Docker Compose |
-| Metrics | Custom Runtime Metrics |
-| Visualization | Matplotlib |
-| Traffic Analysis | Wireshark / tcpdump |
-| Frontend | HTML, CSS, Vanilla JavaScript |
-
-# Key Features
+---
 
 ## Security Features
 
-- Confidentiality using ASCON-AEAD128
-- Authentication tag verification
-- Replay protection using request ID and timestamp validation
-- Associated Data (AAD) binding
-- Tampered ciphertext detection
-- Secure encrypted API communication
-- Secure vs insecure traffic comparison
+| Feature | Status |
+|---|---|
+| ASCON-AEAD128 Encryption | ✅ |
+| Authentication Tag Verification | ✅ |
+| Associated Data (AAD) Binding | ✅ |
+| Replay Attack Protection | ✅ |
+| Tampered Ciphertext Rejection | ✅ |
+| Timestamp Validation | ✅ |
+| Docker Network Isolation | ✅ |
+| Runtime Security Metrics | ✅ |
 
 ---
 
-## Infrastructure Features
+## Encrypted Payload Structure
 
-- Docker-based architecture
-- Internal network segmentation
-- FastAPI secure gateway
-- Flask internal web application
-- Runtime metrics endpoint
-- Benchmark automation
-- Wireshark traffic analysis support
-
----
-
-# Architecture
-
-```text
-Client
-   │
-   │  ASCON-AEAD Encrypted Payload
-   ▼
-┌────────────────────┐
-│  FastAPI Gateway   │
-│  Encryption Layer  │
-└────────────────────┘
-   │
-   │  Internal Docker Network
-   ▼
-┌────────────────────┐
-│   Flask WebApp     │
-└────────────────────┘
-```
-
----
-
-# Security Model
-
-The secure gateway validates:
-
-1. Authentication Tag
-2. Associated Data
-3. Request Timestamp
-4. Request ID Replay Protection
-
-The system rejects:
-- modified ciphertext,
-- replayed requests,
-- invalid authentication tags,
-- malformed encrypted payloads.
-
----
-
-# Secure Payload Structure
+Every request between client and gateway looks like this on the wire:
 
 ```json
 {
   "version": "ascon-aead128",
   "key_id": "key-v1",
-  "nonce": "...",
-  "ciphertext": "...",
-  "tag": "...",
+  "nonce": "<base64>",
+  "ciphertext": "<base64>",
+  "tag": "<base64>",
   "aad": {
-    "client_id": "...",
-    "request_id": "...",
-    "timestamp": 1234567890,
+    "client_id": "demo-client",
+    "request_id": "<uuid>",
+    "timestamp": 1716300000,
     "path": "auth/login",
     "method": "POST"
   }
 }
 ```
 
----
-
-# Security Validation
-
-| Security Test | Result |
-|---|---|
-| Replay Attack | Rejected |
-| Tampered Ciphertext | Rejected |
-| Authentication Tag Validation | Successful |
-| Plaintext Exposure on Secure Endpoint | Not Visible |
-| Plaintext Exposure on Insecure Endpoint | Visible |
+No username. No password. No readable data.
 
 ---
 
-# Benchmark Result
+## Benchmark Results
 
-| Metric | Insecure | Secure ASCON-AEAD |
+50 requests per scenario, measured end-to-end from client to gateway to webapp.
+
+| Metric | Insecure | ASCON-AEAD |
 |---|---:|---:|
-| Average Latency | 13.874 ms | 15.490 ms |
-| P95 Latency | 17.905 ms | 20.028 ms |
-| Success Rate | 100% | 100% |
+| Avg Latency | 13.87 ms | 15.49 ms |
+| P95 Latency | 17.91 ms | 20.03 ms |
 | Payload Size | 45 bytes | 355 bytes |
+| Success Rate | 100% | 100% |
 
-### Average Overhead
+**Encryption overhead: only ~1.6 ms average** — consistent with ASCON's design goal as a lightweight algorithm.
 
-- Average Latency Overhead: **1.616 ms**
-- P95 Latency Overhead: **2.123 ms**
-- Payload Overhead: **310 bytes**
-
----
-
-# Benchmark Visualization
-
-## Average Latency
-
-![Average Latency](docs/images/benchmark_avg_latency.png)
+![Avg Latency](docs/images/benchmark_avg_latency.png)
+![Overhead](docs/images/benchmark_overhead_summary.png)
 
 ---
 
-## P95 Latency
+## Quick Start
 
-![P95 Latency](docs/images/benchmark_p95_latency.png)
+### Prerequisites
+- Docker Desktop (WSL2 integration enabled if on Windows)
+- Python 3.12+
+- Wireshark — [download](https://www.wireshark.org/download.html) *(install Npcap when prompted)*
 
----
-
-## Payload Size Comparison
-
-![Payload Size](docs/images/benchmark_payload_size.png)
-
----
-
-## Overhead Summary
-
-![Overhead Summary](docs/images/benchmark_overhead_summary.png)
-
----
-
-# Runtime Metrics
-
-The system provides runtime observability via:
-
-```http
-GET /metrics
-```
-
-Example metrics:
-
-```json
-{
-  "requests_total": 10,
-  "secure_requests_total": 9,
-  "decrypt_success": 7,
-  "decrypt_failures": 1,
-  "replay_rejected": 1,
-  "tampered_rejected": 1,
-  "avg_encrypt_ms": 1.085,
-  "avg_decrypt_ms": 1.295
-}
-```
-
----
-
-# Wireshark Traffic Analysis
-
-The project includes comparative traffic analysis between:
-
-- insecure plaintext communication
-- ASCON-AEAD encrypted communication
-
-Traffic analysis demonstrates that secure endpoints only expose:
-- ciphertext
-- nonce
-- authentication tag
-- associated data
-
-while plaintext credentials remain hidden.
-
----
-
-# Project Structure
-
-```text
-ascon-secure-gateway/
-├── client/
-├── gateway/
-├── webapp/
-├── scripts/
-├── docs/
-├── captures/
-├── docker-compose.yml
-└── README.md
-```
-
----
-
-# Run and Test
-
-## 1. Clone Repository
+### 1. Clone and start
 
 ```bash
 git clone https://github.com/egayurcel990/ascon-secure-gateway.git
 cd ascon-secure-gateway
-```
 
-## 2. Create Environment File
-
-```bash
 cp .env.example .env
-```
-
-## 3. Build and Start Containers
-
-```bash
 docker compose up -d --build
 ```
 
-Check container status:
-
+Verify:
 ```bash
 docker compose ps
-```
-
-Check gateway health:
-
-```bash
 curl http://localhost:8000/health
+# {"status":"ok","service":"ascon-aead-gateway","version":"1.2.0"}
 ```
 
-Expected result:
-
-```json
-{
-  "status": "ok",
-  "service": "ascon-aead-gateway",
-  "version": "1.2.0"
-}
-```
-
-## 4. Run CLI Security Demo
+### 2. Run the demo
 
 ```bash
 cd client
+python3 -m venv venv && source venv/bin/activate
+pip install requests
 python3 demo.py
 ```
 
-This demo validates:
+The demo tests: encrypted login, wrong password, token verification, replay attack rejection, tampered ciphertext rejection, and insecure comparison.
 
-- encrypted login request
-- login failure handling
-- token verification
-- logout
-- replay attack rejection
-- tampered ciphertext rejection
-- insecure plaintext comparison
-
-## 5. Run Browser Web UI
-
-From the project root:
+### 3. Open the Web UI
 
 ```bash
-cd client
+# Still in client/ with venv active
 python3 -m http.server 3000
 ```
 
-Open:
+> **WSL users:** find your WSL IP first: `ip addr show eth0 | grep "inet "`  
+> Then open `http://<WSL-IP>:3000` instead of localhost.
 
-```text
-http://localhost:3000
+Open the URL in your browser. Try logging in — the traffic monitor on the right shows each encrypted request in real time.
+
+Demo accounts: `admin / admin123` · `alice / user123`
+
+---
+
+## Wireshark Capture (Proving Confidentiality)
+
+> **Why tcpdump inside the container?**  
+> Docker Desktop routes container traffic through an internal virtual network that doesn't pass through Windows interfaces. We capture from inside the container and export the `.pcap` file.
+
+**Open two terminals.**
+
+**Terminal 1 — start web server:**
+```bash
+cd client && source venv/bin/activate
+python3 -m http.server 3000
 ```
 
-Use demo credentials:
+**Terminal 2 — start packet capture:**
+```bash
+docker exec -it ascon-gateway tcpdump -i eth0 -w /tmp/capture.pcap port 8000
+```
 
-```text
+**Perform actions in the browser** — login, logout, try wrong password, click "Run Security Test".
+
+**Terminal 2 — stop capture and export:**
+```bash
+# Press Ctrl+C, then:
+docker cp ascon-gateway:/tmp/capture.pcap ./captures/demo.pcap
+```
+
+**Open in Wireshark:**
+1. File → Open → `captures/demo.pcap`
+2. Filter: `tcp.port == 8000`
+3. Click any `POST /secure/auth/login` packet
+4. Expand **JavaScript Object Notation** in the bottom panel
+
+**Secure endpoint** — only ciphertext visible:
+```
+ciphertext: 4AtmCjcqUCpekudjWtejY16M...
+nonce:      tM1uYJxSrHz8IWyipi1RIw==
+tag:        xZ9k2mP...
+```
+
+**Insecure endpoint** (for comparison) — plaintext exposed:
+```
 username: admin
 password: admin123
 ```
 
-The web UI provides:
+Wireshark filter to compare both: `frame contains "ciphertext"` vs `frame contains "password"`
 
-- browser-side ASCON-AEAD encryption
-- encrypted login testing
-- traffic monitor
-- realtime security metrics
-- Run Security Test button
-- secure vs insecure request comparison
+---
 
-## 6. Run Automated Security Test from UI
-
-Click:
-
-```text
-Run Security Test
-```
-
-The UI will automatically test:
-
-- secure encrypted login
-- replay attack rejection
-- tampered ciphertext rejection
-- insecure plaintext request comparison
-- metrics update
-
-Expected result:
-
-| Test | Expected Result |
-|---|---|
-| Secure Login | 200 OK |
-| Replay Attack | 400 Rejected |
-| Tampered Ciphertext | 400 Rejected |
-| Insecure Login | 200 OK, plaintext visible |
-
-## 7. Check Runtime Metrics
+## Runtime Metrics
 
 ```bash
 curl http://localhost:8000/metrics
 ```
 
-Example output:
-
 ```json
 {
   "requests_total": 10,
-  "secure_requests_total": 9,
-  "insecure_requests_total": 1,
-  "decrypt_success": 7,
+  "decrypt_success": 8,
   "decrypt_failures": 1,
   "replay_rejected": 1,
   "tampered_rejected": 1,
   "avg_encrypt_ms": 1.085,
-  "avg_decrypt_ms": 1.2959,
-  "avg_request_latency_ms": 20.9292
+  "avg_decrypt_ms": 1.296,
+  "avg_request_latency_ms": 20.93
 }
 ```
 
-## 8. Capture Traffic with PCAP
+---
 
-Start capture:
-
-```bash
-sudo tcpdump -i any port 8000 -w captures/ascon-demo.pcap
-```
-
-Run CLI demo or browser UI test.
-
-Stop capture:
-
-```text
-CTRL + C
-```
-
-Open the `.pcap` file in Wireshark.
-
-Useful Wireshark filters:
-
-```text
-frame contains "ciphertext"
-```
-
-```text
-frame contains "password"
-```
-
-Expected result:
-
-- `/secure/auth/login` only exposes ciphertext, nonce, tag, and AAD.
-- `/insecure/auth/login` exposes username and password in plaintext.
-
-## 9. Run Benchmark
-
-From project root:
+## Benchmark
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install requests matplotlib
 python3 scripts/benchmark.py
-```
-
-This generates:
-
-```text
-benchmark-result.json
-```
-
-## 10. Generate Benchmark Charts
-
-```bash
 python3 scripts/generate_benchmark_chart.py
 ```
 
-Generated charts are saved to:
+Charts are saved to `docs/images/`.
 
-```text
-docs/images/
+---
+
+## Project Structure
+
 ```
-
-## 11. Stop Containers
-
-```bash
-docker compose down
-```
-
-To remove volumes:
-
-```bash
-docker compose down -v
+ascon-secure-gateway/
+├── gateway/
+│   ├── ascon.py          ← ASCON-AEAD128 from scratch (pure Python)
+│   ├── main.py           ← FastAPI gateway with replay & tag validation
+│   └── metrics.py        ← Runtime metrics
+├── webapp/
+│   └── main.py           ← Flask login system (SQLite)
+├── client/
+│   ├── demo.py           ← CLI demo script
+│   └── index.html        ← Web UI with traffic monitor
+├── scripts/
+│   ├── benchmark.py      ← Performance benchmark
+│   └── capture_traffic.sh
+├── docs/
+│   ├── SECURITY_MODEL.md
+│   ├── BENCHMARK_REPORT.md
+│   └── images/
+├── captures/             ← Put .pcap files here
+└── docker-compose.yml
 ```
 
 ---
 
-# Documentation
+## Threat Model
 
-| Document | Description |
+| Threat | Coverage |
 |---|---|
-| `docs/BENCHMARK_REPORT.md` | Benchmark analysis |
-| `docs/SECURITY_MODEL.md` | Security architecture |
-| `docs/TESTING_GUIDE.md` | Testing procedure |
+| Plaintext credential exposure | ✅ Mitigated |
+| Replay attack | ✅ Mitigated |
+| Ciphertext tampering | ✅ Mitigated |
+| Payload modification | ✅ Mitigated |
+| Endpoint compromise | ⚠️ Out of scope |
+| Key leakage | ⚠️ Out of scope |
 
 ---
 
-# Research Contribution
+## Roadmap
 
-This project demonstrates the feasibility of integrating lightweight authenticated encryption into Docker-based microservice communication while maintaining relatively low latency overhead.
-
-The implementation combines:
-- lightweight cryptography,
-- secure gateway architecture,
-- runtime validation,
-- replay protection,
-- authenticated encrypted communication,
-- and traffic analysis validation.
-
----
-
-# Future Improvements
-
-- Prometheus & Grafana integration
-- Argon2 password hashing
-- Key rotation support
-- Redis-based distributed replay cache
-- TLS integration
-- Kubernetes deployment
-- Load testing with k6
-- CI/CD security pipeline
+- [x] ASCON-AEAD128 pure Python implementation
+- [x] Authenticated encryption with tag verification
+- [x] Replay protection (request ID + timestamp window)
+- [x] Docker network isolation
+- [x] Runtime metrics endpoint
+- [x] Benchmark with chart visualization
+- [x] Insecure comparison endpoint
+- [ ] Key rotation
+- [ ] Redis-based distributed replay cache
+- [ ] Argon2 password hashing
+- [ ] Prometheus + Grafana integration
+- [ ] Kubernetes deployment
 
 ---
 
-# License
+## References
 
-This project is intended for educational, research, and security engineering purposes.
+- [ASCON Specification v1.2](https://ascon.iaik.tugraz.at/files/asconv12-nist.pdf)
+- [NIST Lightweight Cryptography](https://csrc.nist.gov/projects/lightweight-cryptography)
+- [ASCON Official Website](https://ascon.iaik.tugraz.at/)
+
+---
+
+*For educational and research purposes.*
