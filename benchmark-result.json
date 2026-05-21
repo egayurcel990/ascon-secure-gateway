@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "requests_per_scenario": 50,
+    "base_url": "http://localhost:8000",
+    "secure_endpoint": "/secure/auth/login",
+    "insecure_endpoint": "/insecure/auth/login"
+  },
+  "benchmark": {
+    "insecure": {
+      "requests": 50,
+      "success_rate": 100.0,
+      "avg_latency_ms": 13.874,
+      "min_latency_ms": 11.939,
+      "max_latency_ms": 30.534,
+      "p95_latency_ms": 17.905,
+      "avg_payload_size_bytes": 45
+    },
+    "secure_ascon_aead": {
+      "requests": 50,
+      "success_rate": 100.0,
+      "avg_latency_ms": 15.49,
+      "min_latency_ms": 13.714,
+      "max_latency_ms": 20.794,
+      "p95_latency_ms": 20.028,
+      "avg_payload_size_bytes": 355
+    }
+  },
+  "overhead": {
+    "avg_latency_overhead_ms": 1.616,
+    "p95_latency_overhead_ms": 2.123,
+    "payload_overhead_bytes": 310
+  }
+}
