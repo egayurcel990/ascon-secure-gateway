@@ -159,7 +159,7 @@ python3 -m http.server 3000
 
 **Terminal 2 — start packet capture:**
 ```bash
-docker exec -it ascon-gateway tcpdump -i eth0 -w /tmp/capture.pcap port 8000
+docker exec -it ascon-gateway tcpdump -i any -w /tmp/capture.pcap port 8000
 ```
 
 **Perform actions in the browser** — login, logout, try wrong password, click "Run Security Test".
