@@ -103,7 +103,7 @@ No username. No password. No readable data.
 ### 1. Clone and start
 
 ```bash
-git clone https://github.com/egayurcel990/ascon-secure-gateway.git
+git clone https://github.com/marquisccel/ascon-secure-gateway.git
 cd ascon-secure-gateway
 
 cp .env.example .env
